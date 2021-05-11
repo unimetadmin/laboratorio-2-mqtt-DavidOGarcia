@@ -7,32 +7,31 @@ import paho.mqtt.client
 import paho.mqtt.publish
 import numpy as np
 import datetime
+import request
 
 def on_connect(client, userdata, flags, rc):
 	print('conectado publicador')
 
 
+
 def main():
-	client = paho.mqtt.client.Client("Unimet", False)
-	client.qos = 0
-	client.connect(host='localhost')
-	meanEntrada = 10 #media
-	stdEntrada = 2  #desviacion estandar
-	tempMax = 12  #temperatura maxima
-	horaBase= datetime.datetime.now().replace(minute=0, second=0)
-	personasPorHora = np.random.normal(meanEntrada, stdEntrada)
-	horaBase = horaBase + datetime.timedelta(hours=1)
-	while(personasPorHora>0):
-		hora = horaBase + datetime.timedelta(minutes=np.random.uniform(0,60))				
-		temp = int(np.random.uniform(8, tempMax))
-		payload = {
-			"fecha": str(hora),
-			"temperatura": str(temp)
-		}
-		client.publish('unimet/admin/bd',json.dumps(payload),qos=0)		
-		personasPorHora-=1
-		print(payload)
-		time.sleep(300)
+    
+    client = paho.mqtt.client.Client("Unimet", False)
+    client.qos = 0
+    client.connect(host='localhost')
+
+    while(True):
+        url = "http://api.openweathermap.org/data/2.5/weather?q=Caracas&appid=6cf9ae43293928ec740fd51b2c9c524a"
+        text = requests.get(url).json()
+        temp = int(text['main']['temp']) - 273
+        payload = {
+            "temperatura de Caracas": str(temp)
+        }
+        
+        client.publish('casa/sala/alexa', json.dumps(payload), qos=0)
+        print(payload)
+        time.sleep(1)
+        
 if __name__ == '__main__':
 	main()
 	sys.exit(0)
